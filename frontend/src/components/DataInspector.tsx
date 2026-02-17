@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { db } from "../db/database";
+import { useState, useEffect, useCallback } from "react";
+import { getDb } from "../db/database";
 
 interface TableInfo {
   name: string;
@@ -17,22 +17,31 @@ export function DataInspector() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [schema, setSchema] = useState<SchemaInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const refreshTables = async () => {
-    if (!db) return;
-
+  const refreshTables = useCallback(async () => {
     setLoading(true);
+    setError(null);
+
     try {
+      const database = await getDb();
+      if (!database) {
+        setTables([]);
+        setSchema(null);
+        setLoading(false);
+        return;
+      }
+
       // Get schema
-      const schemaData = await db.__meta.get("schema");
+      const schemaData = await database.__meta.get("schema");
       setSchema(schemaData || null);
 
       if (schemaData?.resources) {
         const tableInfos: TableInfo[] = [];
 
         for (const name of schemaData.resources) {
-          const table = (db as any)[name];
+          const table = (database as any)[name];
           if (table) {
             const count = await table.count();
             tableInfos.push({ name, count });
@@ -43,21 +52,23 @@ export function DataInspector() {
       }
     } catch (err) {
       console.error("Failed to load tables:", err);
+      setError(String(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshTables();
-  }, []);
+  }, [refreshTables]);
 
   const loadTableData = async (tableName: string) => {
-    if (!db) return;
+    const database = await getDb();
+    if (!database) return;
 
     setLoading(true);
     try {
-      const table = (db as any)[tableName];
+      const table = (database as any)[tableName];
       if (table) {
         const data = await table.toArray();
         setRows(data);
@@ -65,17 +76,18 @@ export function DataInspector() {
       }
     } catch (err) {
       console.error("Failed to load table data:", err);
+      setError(String(err));
     } finally {
       setLoading(false);
     }
   };
 
   const clearAllData = async () => {
-    if (!db || !confirm("Are you sure you want to clear all data?")) return;
+    const database = await getDb();
+    if (!database || !confirm("Are you sure you want to clear all data?")) return;
 
     try {
-      await db.delete();
-      await db.open();
+      await database.delete();
       setTables([]);
       setRows([]);
       setSelectedTable(null);
@@ -83,10 +95,28 @@ export function DataInspector() {
       alert("All data cleared!");
     } catch (err) {
       console.error("Failed to clear data:", err);
+      setError(String(err));
     }
   };
 
-  if (tables.length === 0 && !loading) {
+  if (loading && tables.length === 0) {
+    return (
+      <div style={styles.container}>
+        <p>Loading stored data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.container}>
+        <p style={{ color: "red" }}>Error: {error}</p>
+        <button onClick={refreshTables} style={styles.button}>Retry</button>
+      </div>
+    );
+  }
+
+  if (tables.length === 0) {
     return (
       <div style={styles.empty}>
         <p>No data loaded yet.</p>

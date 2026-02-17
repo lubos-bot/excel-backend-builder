@@ -1,7 +1,11 @@
 import { parseExcel } from "../excel/excelParser";
 import { initDb } from "../db/database";
 
-export function ExcelUploader() {
+interface ExcelUploaderProps {
+  onUploadComplete?: () => void;
+}
+
+export function ExcelUploader({ onUploadComplete }: ExcelUploaderProps) {
   const handleFile = async (file: File) => {
     try {
       const parsed = await parseExcel(file);
@@ -23,6 +27,9 @@ export function ExcelUploader() {
       });
 
       alert(`Excel imported successfully!\n\nResources: ${resources.join(", ")}`);
+      
+      // Notify parent to refresh inspector
+      onUploadComplete?.();
     } catch (err) {
       console.error("Import failed:", err);
       alert("Failed to import Excel file. Check console for details.");
