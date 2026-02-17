@@ -37,7 +37,7 @@ export function ExcelUploader({ onUploadComplete }: ExcelUploaderProps) {
   };
 
   return (
-    <div style={{ marginTop: 20 }}>
+    <div className="uploader">
       <input
         type="file"
         accept=".xlsx,.xls"
@@ -47,7 +47,7 @@ export function ExcelUploader({ onUploadComplete }: ExcelUploaderProps) {
           }
         }}
       />
-      <p style={{ color: "#666", marginTop: 10, fontSize: 14 }}>
+      <p className="uploader-hint">
         Upload an Excel file. Each sheet will become a resource table in IndexedDB.
       </p>
     </div>

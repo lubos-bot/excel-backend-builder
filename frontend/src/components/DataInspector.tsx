@@ -101,7 +101,7 @@ export function DataInspector() {
 
   if (loading && tables.length === 0) {
     return (
-      <div style={styles.container}>
+      <div className="inspector-container">
         <p>Loading stored data...</p>
       </div>
     );
@@ -109,69 +109,66 @@ export function DataInspector() {
 
   if (error) {
     return (
-      <div style={styles.container}>
-        <p style={{ color: "red" }}>Error: {error}</p>
-        <button onClick={refreshTables} style={styles.button}>Retry</button>
+      <div className="inspector-container">
+        <p className="error">Error: {error}</p>
+        <button className="btn" onClick={refreshTables}>Retry</button>
       </div>
     );
   }
 
   if (tables.length === 0) {
     return (
-      <div style={styles.empty}>
+      <div className="inspector-empty">
         <p>No data loaded yet.</p>
-        <p style={{ color: "#666" }}>Upload an Excel file to get started.</p>
+        <p>Upload an Excel file to get started.</p>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
+    <div className="inspector-container">
+      <div className="inspector-header">
         <h3>📊 IndexedDB Inspector</h3>
         <div>
-          <button onClick={refreshTables} style={styles.button}>
+          <button className="btn" onClick={refreshTables}>
             Refresh
           </button>
-          <button onClick={clearAllData} style={{ ...styles.button, ...styles.danger }}>
+          <button className="btn btn-danger" onClick={clearAllData}>
             Clear All
           </button>
         </div>
       </div>
 
       {schema && (
-        <div style={styles.schemaInfo}>
+        <div className="schema-info">
           <strong>Uploaded:</strong> {new Date(schema.uploadedAt).toLocaleString()}
         </div>
       )}
 
-      <div style={styles.tableList}>
+      <div className="table-list">
         <strong>Resources:</strong>
         {tables.map(t => (
           <button
             key={t.name}
             onClick={() => loadTableData(t.name)}
-            style={{
-              ...styles.tableButton,
-              ...(selectedTable === t.name ? styles.tableButtonActive : {})
-            }}
+            className={`table-btn ${selectedTable === t.name ? "active" : ""}`}
           >
-            {t.name} <span style={styles.count}>({t.count})</span>
+            {t.name} <span className="count">({t.count})</span>
           </button>
         ))}
       </div>
 
-      {loading && <p style={styles.loading}>Loading...</p>}
+      {loading && <p className="loading">Loading...</p>}
 
       {selectedTable && rows.length > 0 && (
-        <div style={styles.tableWrapper}>
+        <div className="data-table-wrapper">
           <h4>📋 {selectedTable} ({rows.length} rows)</h4>
-          <div style={styles.tableScroll}>
-            <table style={styles.table}>
+          <div className="data-table-scroll">
+            <table className="data-table">
               <thead>
                 <tr>
                   {Object.keys(rows[0]).map(key => (
-                    <th key={key} style={styles.th}>{key}</th>
+                    <th key={key}>{key}</th>
                   ))}
                 </tr>
               </thead>
@@ -179,8 +176,8 @@ export function DataInspector() {
                 {rows.slice(0, 100).map((row, i) => (
                   <tr key={row.id || i}>
                     {Object.values(row).map((val: any, j) => (
-                      <td key={j} style={styles.td}>
-                        {val === null ? <span style={{ color: "#999" }}>null</span> : String(val)}
+                      <td key={j}>
+                        {val === null ? <span className="null">null</span> : String(val)}
                       </td>
                     ))}
                   </tr>
@@ -188,7 +185,7 @@ export function DataInspector() {
               </tbody>
             </table>
             {rows.length > 100 && (
-              <p style={styles.truncated}>Showing first 100 of {rows.length} rows</p>
+              <p className="truncated">Showing first 100 of {rows.length} rows</p>
             )}
           </div>
         </div>
@@ -196,107 +193,3 @@ export function DataInspector() {
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    marginTop: 30,
-    padding: 20,
-    background: "#f8f9fa",
-    borderRadius: 8,
-    border: "1px solid #dee2e6",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  button: {
-    padding: "6px 12px",
-    marginRight: 8,
-    border: "1px solid #ccc",
-    borderRadius: 4,
-    background: "#fff",
-    cursor: "pointer",
-  },
-  danger: {
-    background: "#fff",
-    borderColor: "#dc3545",
-    color: "#dc3545",
-  },
-  schemaInfo: {
-    marginBottom: 15,
-    padding: 10,
-    background: "#e3f2fd",
-    borderRadius: 4,
-    fontSize: 14,
-  },
-  tableList: {
-    marginBottom: 15,
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-    alignItems: "center",
-  },
-  tableButton: {
-    padding: "8px 16px",
-    border: "1px solid #007bff",
-    borderRadius: 20,
-    background: "#fff",
-    cursor: "pointer",
-    fontSize: 14,
-  },
-  tableButtonActive: {
-    background: "#007bff",
-    color: "#fff",
-  },
-  count: {
-    opacity: 0.7,
-    fontSize: 12,
-  },
-  loading: {
-    color: "#666",
-    fontStyle: "italic",
-  },
-  empty: {
-    marginTop: 30,
-    padding: 20,
-    background: "#f8f9fa",
-    borderRadius: 8,
-    textAlign: "center",
-    color: "#666",
-  },
-  tableWrapper: {
-    marginTop: 20,
-  },
-  tableScroll: {
-    overflowX: "auto",
-    marginTop: 10,
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 13,
-  },
-  th: {
-    background: "#007bff",
-    color: "#fff",
-    padding: "10px 12px",
-    textAlign: "left",
-    whiteSpace: "nowrap",
-  },
-  td: {
-    padding: "8px 12px",
-    borderBottom: "1px solid #dee2e6",
-    maxWidth: 200,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  truncated: {
-    marginTop: 10,
-    color: "#666",
-    fontSize: 13,
-    fontStyle: "italic",
-  },
-};
